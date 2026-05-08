@@ -7,7 +7,7 @@
 
 ## Overview
 
-This tool generates synthetic supply chain logistics datasets modelled after the seven-table relational schema of the Brunel University London Supply Chain Logistics Problem. It is designed for researchers and analysts who need scalable, reproducible, constraint-compliant benchmark data for testing route cost optimization algorithms — particularly Linear Programming and Mixed-Integer Programming models — at arbitrary network scales and under configurable distributional assumptions.
+This tool generates synthetic supply chain logistics datasets modelled after the seven-table relational schema of the Brunel University London Supply Chain Logistics Problem. It is designed for supply chain and operations analysts who need scalable, reproducible, constraint-compliant benchmark data for testing route cost optimization algorithms, particularly Linear Programming and Mixed-Integer Programming models, at arbitrary network scales and under configurable distributional assumptions.
 
 The core idea is that every distributional assumption in the generator is fully exposed and user-controlled. You decide the network size, the shape of the demand distribution, how freight rates are structured, what fraction of customers are VMI-restricted, and how warehouse costs are drawn. The generator then produces a dataset that is internally consistent, referentially complete, and guaranteed to satisfy all hard network constraints by construction.
 
@@ -32,9 +32,9 @@ The core idea is that every distributional assumption in the generator is fully 
 
 Supply chain or operations analysts who want to test optimization models at different network scales, demand volatilities, or constraint densities face two compounding difficulties.
 
-First, publicly available benchmark datasets — including the Brunel University London dataset — represent a single static snapshot of one specific network configuration. A researcher cannot study how an algorithm scales from a 5-warehouse to a 50-warehouse network, or how it degrades under high demand volatility, because the dataset cannot be varied.
+First, publicly available benchmark datasets, including the Brunel University London dataset, represent a single static snapshot of one specific network configuration. A researcher cannot study how an algorithm scales from a 5-warehouse to a 50-warehouse network, or how it degrades under high demand volatility, because the dataset cannot be varied.
 
-Second, edge cases — unusual constraint combinations that stress-test an optimizer's feasibility handling — appear rarely or not at all in fixed datasets. A configurable generator lets you dial up constraint density, skew the demand distribution, or force high VMI ratios until the edge cases you care about appear with sufficient frequency.
+Second, edge cases or unusual constraint combinations that stress-test an optimizer's feasibility handling appear rarely or not at all in fixed datasets. A configurable generator lets you amplify constraint density, skew the demand distribution, or force high VMI ratios until the edge cases you care about appear with sufficient frequency.
 
 This generator addresses both problems: it produces datasets at any scale with any distributional shape, while guaranteeing that every generated instance is a valid, feasible input to a downstream optimization model.
 
@@ -71,7 +71,7 @@ The generator is implemented as two Python objects: `GeneratorConfig`, a datacla
 
 **Dependency-ordered generation.** Tables are generated in an order that ensures every foreign key exists before it is referenced. Reference tables with no dependencies (PlantPorts, WhCosts) are generated first. The central fact table (OrderList) is generated last, after all lookup tables are in place. WhCapacities is generated after OrderList because its capacity values are derived from the actual order load.
 
-**Constraints enforced by construction, not post-hoc.** The most important design decision is that the three hard referential constraints — plant-product authorization, plant-port connectivity, and VMI routing — are enforced during row assembly in the OrderList loop, not checked and discarded afterward. This means no generated row is ever infeasible. The validation suite's role is to confirm this, not to filter bad rows.
+**Constraints enforced by construction, not post-hoc.** The most important design decision is that the three hard referential constraints: plant-product authorization, plant-port connectivity, and VMI routing, are enforced during row assembly in the OrderList loop, not checked and discarded afterward. This means no generated row is ever infeasible. The validation suite's role is to confirm this, not to filter bad rows.
 
 **Full reproducibility via seeded RNG.** All random draws throughout the entire pipeline flow through a single `numpy.random.default_rng` object initialized from the user-supplied `seed` parameter. Fixing the seed and the config produces identical output across runs and machines.
 
@@ -91,7 +91,7 @@ The generator is implemented as two Python objects: `GeneratorConfig`, a datacla
 
 `OrderList` generation is split into two phases to balance performance and correctness.
 
-**Phase 1 — Vectorized pre-draws.** All dimension-independent quantities are sampled in batch using NumPy:
+**Phase 1: Vectorized pre-draws.** All dimension-independent quantities are sampled in batch using NumPy:
 
 - Customer index drawn uniformly from the customer pool.
 - Order date drawn uniformly over the configured date range.
@@ -102,7 +102,7 @@ The generator is implemented as two Python objects: `GeneratorConfig`, a datacla
 - Unit weight drawn from the user-selected distribution (uniform or gamma).
 - Carrier drawn uniformly from the carrier pool.
 
-**Phase 2 — Per-row constraint resolution.** For each order, the product, plant, and port are resolved sequentially:
+**Phase 2: Per-row constraint resolution.** For each order, the product, plant, and port are resolved sequentially:
 
 1. If the customer is a VMI customer, the product is drawn from the subset of products that are stocked by at least one VMI-eligible plant. Otherwise it is drawn from the full catalogue.
 2. The plant is drawn from the set of plants that stock the selected product according to `ProductsPerPlant`. If the customer is VMI, this set is further restricted to VMI-designated plants.
